@@ -1,0 +1,22 @@
+{
+  "name": "f6rp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run build && ws --https --port 7302 --cors.origin=*",
+    "build": "node-sass src/ --output src/ && node build/build-launcher",
+    "test-build": "ws --directory dist/ --https --port 7302 --cors.origin *"
+  },
+  "dependencies": {
+    "request": "^2.88.0",
+    "vue": "^2.6.10"
+  },
+  "devDependencies": {
+    "bootstrap": "^4.3.1",
+    "ejs": "^2.7.1",
+    "local-web-server": "^3.0.7",
+    "node-sass": "^4.12.0",
+    "jquery": "^1.9.1",
+    "popper.js": "^1.16.1"
+  }
+}

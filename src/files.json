@@ -1,0 +1,15 @@
+[
+    [
+        {
+            "src": "package.json",
+            "saveAs": "package"
+        },
+        {
+            "src": "src/view/style.css"
+        },
+        {
+            "src": "node_modules/vue/dist/vue.min.js",
+            "requirePath": "https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.min.js"
+        }
+    ]
+]
