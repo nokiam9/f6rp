@@ -10,6 +10,12 @@
         {
             "src": "node_modules/vue/dist/vue.min.js",
             "requirePath": "https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.min.js"
+        },
+        {
+            "src": "src/app/util.js"
+        },
+        {
+            "src": "src/app/main.js"
         }
     ]
 ]
