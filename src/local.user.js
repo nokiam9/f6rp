@@ -4,8 +4,7 @@
 // @grant           unsafeWindow
 // @author          sj0225@icloud.com
 // @noframes
-// @include         https://b2b.10086.cn*
-// @include         http://b2b.10086.cn*
+// @match           https://b2b.10086.cn/b2b/main/listVendorNotice.html*
 // @include         http://f6rp.caogo.cn*
 // @include         https://127.0.0.1*
 // @include         http://127.0.0.1*
