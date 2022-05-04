@@ -75,8 +75,9 @@ class F6rpStatus {
 
     update(type_id, new_total) {
         const now = this.get(type_id);
+        if (!Number(new_total)) return null;
         if (new_total < now.total) {
-            console.log('Error(updateStatus): update status of new total error! new_total=', new_total, ', status=', reprStatus(type_id));
+            console.log('Error(updateStatus): update status of new total error! new_total=', new_total, ', status=', this.repr(type_id));
             return null;
         } else if (new_total > now.total) {
             console.log('Info(updateStatus): 发现', new_total-now.total, '条新纪录！！！ total=', now.total, ', new total=', new_total);

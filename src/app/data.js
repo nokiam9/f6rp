@@ -9,7 +9,7 @@
     }
 }
 // 页面的任务对象
-class F6rpPageRequest extends PxerRequest{
+class F6rpPageRequest extends F6rpRequest{
     constructor(...argn) {
         super(...argn);
         this.type_id = argn[0].type_id;
