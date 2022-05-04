@@ -85,7 +85,23 @@ class F6rpStatus {
             console.log('Info(updateStatus): 发现', new_total-now.total, '条新纪录！！！ total=', now.total, ', new total=', new_total);
             this.set(type_id, {total:new_total, start:now.start, end:now.end});
         }
-        
+
         return this.get(type_id);
     }
+
+    // Func：根据status的timestamp信息，返回TM最近一次运行的时间
+    lastRuntime(type_id) {
+        const ts = this.get(type_id).timestamp;
+        return ts === null ? 0 : ts
+    }
+
+    lastRuntime() {
+        let last = 0;
+        for (let x of this.list) {
+            const ts = x.status.timestamp;
+            if ( ts > last) last = ts;
+        }
+        return last;
+    }
+
 }
