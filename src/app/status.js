@@ -59,22 +59,24 @@ class F6rpStatus {
     }
 
     repr(type_id) {
-        if (!type_id) {
-            let str = null;
-            for (let element of this.list) {
-                str += this._repr(element.type_id, element.status) + '\n'
-            }
-            return str;
+        const status = this.get(type_id);
+
+        if (status) return this._repr(type_id, status);
+        else return null;
+    }
+
+    repr() {
+        let str = null;
+
+        for (let element of this.list) {
+            str += this._repr(element.type_id, element.status) + '\n'
         }
-        else {
-            const status = this.get(type_id);
-            if (!status) return null;
-            else return this._repr(type_id, status);
-        }
+        return str;
     }
 
     update(type_id, new_total) {
         const now = this.get(type_id);
+
         if (!Number(new_total)) return null;
         if (new_total < now.total) {
             console.log('Error(updateStatus): update status of new total error! new_total=', new_total, ', status=', this.repr(type_id));
@@ -83,6 +85,7 @@ class F6rpStatus {
             console.log('Info(updateStatus): 发现', new_total-now.total, '条新纪录！！！ total=', now.total, ', new total=', new_total);
             this.set(type_id, {total:new_total, start:now.start, end:now.end});
         }
+        
         return this.get(type_id);
     }
 }
