@@ -21,6 +21,9 @@
             "src": "src/app/data.js"
         },
         {
+            "src": "src/app/status.js"
+        },
+        {
             "src": "src/app/main.js"
         }
     ]
