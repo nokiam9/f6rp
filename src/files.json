@@ -18,6 +18,9 @@
             "src": "src/app/util.js"
         },
         {
+            "src": "src/app/data.js"
+        },
+        {
             "src": "src/app/main.js"
         }
     ]
