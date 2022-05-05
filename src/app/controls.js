@@ -2,12 +2,15 @@
 
 const LocalStorageStatusKey = 'F6rpStatus';
 
-// F6rpStatus：管理爬虫的全部滑动窗口信息，并通过浏览器的LocalStroage完成持久化
+/** F6rpStatusManger：
+*       管理爬虫的全部滑动窗口信息，并通过浏览器的LocalStroage完成持久化（以网站域名隔离）
+*       status = {type_id, total, start, end, timestamp}
+*/
 class F6rpStatusManager {
-    // 构造函数：设置status数组，并持久化存储在LocalStorage（实际存储在浏览器缓存中，以网站域名隔离）
+    // 构造函数：设置status数组，并持久化存储在LocalStorage
     constructor() {
         const v = localStorage.getItem(LocalStorageStatusKey);
-        this.list = (v)? JSON.parse(v) : []; // 数据格式 = [F6rpStatus]
+        this.list = (v)? JSON.parse(v) : []; 
     }
 
     // 持久化存储
@@ -48,18 +51,27 @@ class F6rpStatusManager {
     // 根据tpye_id，读取status
     get(type_id) {
         const index = this.list.findIndex(elt => elt.type_id==type_id);
+
         return (index < 0)? null : this.list[index];
     }
 
     // 字符串输出status
     repr(type_id) {
-        const status = this.get(type_id);
-        return (status) ? this._repr(status) : null;
+        if (!type_id) {     // 不带参数时全量输出
+            let str = '';
+            this.list.forEach(elt => { str += this._repr(elt) + '\n'});
+            return str;
+        }
+        else {
+            const status = this.get(type_id);
+            return (status) ? this._repr(status) : null
+        }
     }
 
     // 计算当前爬取数据的方向，[stop| forward| backward| null]
     direction(type_id) {
         const status = this.get(type_id);
+
         if (!status) return null;
         else if (status.total > status.start) return 'backward'; // 优先读取头部
         else if (status.end > 0) return 'forward';
@@ -81,12 +93,13 @@ class F6rpStatusManager {
     }
 
     // 完成数据列表处理之后，更新滑动窗口的步长信息
-    updateStep(type_id, page_info) {
-        const status = getStatus(type_id);
-        if (!status) return null;   // type_id不存在
+    // Todo: 参数pagination是一个object？
+    updateStep(type_id, pagination) {
+        const status = this.get(type_id);
 
-        const top = page_info.total - ((page_info.current_page - 1) * page_info.page_size);
-        const bottom = top - page_info.records_in_page;
+        if (!status) return null;   // type_id不存在
+        const top = pagination.total - ((pagination.current_page - 1) * pagination.page_size);
+        const bottom = top - pagination.records_in_page;
 
         // 本次读取头部，并确保start在正确区间内的条件下，刷新滑动窗口
         if (status.total > status.start) {
@@ -103,9 +116,23 @@ class F6rpStatusManager {
         return this.get(type_id);
     }
 
+    // 计算下一个将要跳转的页面序号
+    // Todo: 参数pagination是一个object？
+    nextPage(type_id, pagination){
+        const status = this.get(type_id);
+
+        if (!status) return null;
+        if (status.total > status.start) {   // backward
+            return Math.floor((pagination.total - status.start - 1) / pagination.page_size) + 1; 
+        } else if (end > 0) {               // forward
+            return Math.floor((pagination.total - status.end) / pagination.page_size) + 1;
+        } else return 0;                    // stop
+    }
+
     // 根据status的timestamp信息，返回TM最近一次运行的时间
     lastRuntime(type_id) {
         const status = this.get(type_id);
+        
         return (status) ? status.timestamp : 0;
     }
 }
