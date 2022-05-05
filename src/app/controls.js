@@ -4,7 +4,7 @@ const LocalStorageStatusKey = 'F6rpStatus';
 
 /** F6rpStatusManger：
 *       管理爬虫的全部滑动窗口信息，并通过浏览器的LocalStroage完成持久化（以网站域名隔离）
-*       status = {type_id, total, start, end, timestamp}
+*       核心数据 = [{type_id, total, start, end, timestamp}]
 */
 class F6rpStatusManager {
     // 构造函数：设置status数组，并持久化存储在LocalStorage
@@ -45,14 +45,14 @@ class F6rpStatusManager {
             }
         }
         f6rp.log('Error: parameters illegally when set status! type_id=%s total=%s start=%s end=%s', type_id, total, start, end);
-        return null;
+        return false;
     }
 
     // 根据tpye_id，读取status
     get(type_id) {
         const index = this.list.findIndex(elt => elt.type_id==type_id);
 
-        return (index < 0)? null : this.list[index];
+        return (index < 0)? false : this.list[index];
     }
 
     // 字符串输出status
@@ -64,15 +64,15 @@ class F6rpStatusManager {
         }
         else {
             const status = this.get(type_id);
-            return (status) ? this._repr(status) : null
+            return (status) ? this._repr(status) : false
         }
     }
 
-    // 计算当前爬取数据的方向，[stop| forward| backward| null]
+    // 计算当前爬取数据的方向，[ stop| forward| backward| false ]
     direction(type_id) {
         const status = this.get(type_id);
 
-        if (!status) return null;
+        if (!status) return false;
         else if (status.total > status.start) return 'backward'; // 优先读取头部
         else if (status.end > 0) return 'forward';
         else return 'stop';     // stop代表头尾都为空，即将结束退出
@@ -84,7 +84,7 @@ class F6rpStatusManager {
 
         if (!Number(new_total) || !status || (new_total < status.total) ) {
             f6rp.log('Error: parameters illegally when update total! status=%s, new_total=%s', status, new_total);
-            return null;
+            return false;
         } else if (new_total > status.total) {
             f6rp.log('Info: 发现 %s 条新纪录！！！ status=%s, new_total=%s', new_total-status.total, status, new_total);
             this.set(type_id, new_total, status.start, status.end);
@@ -95,9 +95,14 @@ class F6rpStatusManager {
     // 完成数据列表处理之后，更新滑动窗口的步长信息
     // Todo: 参数pagination是一个object？
     updateStep(type_id, pagination) {
-        const status = this.get(type_id);
+        if (!(pagination instanceof F6rpPagination)) {
+            f6rp.log('Error: parameters illegally when nextPage().');
+            return false;
+        }
 
-        if (!status) return null;   // type_id不存在
+        const status = this.get(type_id);
+        if (!status) return false;   // type_id不存在
+
         const top = pagination.total - ((pagination.current_page - 1) * pagination.page_size);
         const bottom = top - pagination.records_in_page;
 
@@ -105,13 +110,13 @@ class F6rpStatusManager {
         if (status.total > status.start) {
             if ((status.start + 1) >= bottom && (status.start + 1) <= top) {
                 this.set(type_id, status.total, top, status.end);
-            } else return null;
+            } else return false;
         }
         // 本次读取尾部，并确保end在正确区间内的条件下，刷新滑动窗口
         if (status.end > 0) {
             if ((status.end - 1) >= bottom && (status.end - 1) <= top) {
                 this.set(type_id, status.total, status.start, bottom);
-            } else return null;
+            } else return false;
         }
         return this.get(type_id);
     }
@@ -119,9 +124,13 @@ class F6rpStatusManager {
     // 计算下一个将要跳转的页面序号
     // Todo: 参数pagination是一个object？
     nextPage(type_id, pagination){
+        if (!(pagination instanceof F6rpPagination)) {
+            f6rp.log('Error: parameters illegally when nextPage().');
+            return false;
+        }
         const status = this.get(type_id);
+        if (!status) return false;
 
-        if (!status) return null;
         if (status.total > status.start) {   // backward
             return Math.floor((pagination.total - status.start - 1) / pagination.page_size) + 1; 
         } else if (end > 0) {               // forward
