@@ -51,7 +51,6 @@ class F6rpStatusManager {
     // 根据tpye_id，读取status
     get(type_id) {
         const index = this.list.findIndex(elt => elt.type_id==type_id);
-
         return (index < 0)? false : this.list[index];
     }
 
@@ -71,9 +70,9 @@ class F6rpStatusManager {
     // 计算当前爬取数据的方向，[ stop| forward| backward| false ]
     direction(type_id) {
         const status = this.get(type_id);
-
         if (!status) return false;
-        else if (status.total > status.start) return 'backward'; // 优先读取头部
+
+        if (status.total > status.start) return 'backward'; // 优先读取头部
         else if (status.end > 0) return 'forward';
         else return 'stop';     // stop代表头尾都为空，即将结束退出
     }
@@ -81,15 +80,16 @@ class F6rpStatusManager {
     // 根据新的记录总数，刷新status状态
     updateTotal(type_id, new_total) {
         const status = this.get(type_id);
-
-        if (!Number(new_total) || !status || (new_total < status.total) ) {
+        if (!status || !Number(new_total) || (new_total < status.total) ) {
             f6rp.log('Error: parameters illegally when update total! status=%s, new_total=%s', status, new_total);
             return false;
-        } else if (new_total > status.total) {
+        } 
+        
+        if (new_total > status.total) {
             f6rp.log('Info: 发现 %s 条新纪录！！！ status=%s, new_total=%s', new_total-status.total, status, new_total);
             this.set(type_id, new_total, status.start, status.end);
             return this.get(type_id);
-        }
+        } else return false; // 记录总数没变化！
     }
 
     // 完成数据列表处理之后，更新滑动窗口的步长信息
@@ -99,13 +99,11 @@ class F6rpStatusManager {
             f6rp.log('Error: parameters illegally when nextPage().');
             return false;
         }
-
         const status = this.get(type_id);
         if (!status) return false;   // type_id不存在
 
         const top = pagination.total - ((pagination.current_page - 1) * pagination.page_size);
         const bottom = top - pagination.records_in_page;
-
         // 本次读取头部，并确保start在正确区间内的条件下，刷新滑动窗口
         if (status.total > status.start) {
             if ((status.start + 1) >= bottom && (status.start + 1) <= top) {
@@ -141,7 +139,6 @@ class F6rpStatusManager {
     // 根据status的timestamp信息，返回TM最近一次运行的时间
     lastRuntime(type_id) {
         const status = this.get(type_id);
-        
         return (status) ? status.timestamp : 0;
     }
 }

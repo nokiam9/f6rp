@@ -18,10 +18,10 @@
             "src": "src/app/util.js"
         },
         {
-            "src": "src/app/data.js"
+            "src": "src/app/Data.js"
         },
         {
-            "src": "src/app/controls.js"
+            "src": "src/app/Controls.js"
         },
         {
             "src": "src/app/main.js"
