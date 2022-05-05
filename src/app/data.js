@@ -17,10 +17,9 @@ class F6rpPageRequest extends F6rpRequest{
 }
 
 // 构造对象PageInfo，对应Page底部的pageination信息
-class F6rpPageInfo {
-    constructor({spider, type_id ,total, current_page, page_size=20, records_in_page}) {
-        this.spider = spider;       // Todo：replace with UID
-        this.type_id = type_id;     // Todo：replace with url
+class F6rpPagination {
+    constructor(type_id, total, current_page, records_in_page, page_size=20) {
+        this.type_id = type_id;
         this.total = total;
         this.current_page = current_page;   // key info
         this.page_size = page_size;
