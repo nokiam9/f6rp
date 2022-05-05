@@ -1,22 +1,24 @@
 'use strict';
 
-const LocalStorageKey = 'F6rpStatus';
+const LocalStorageStatusKey = 'F6rpStatus';
 
+
+// F6rpStatus：保存爬虫的滑动窗口信息，并通过浏览器的LocalStroage完成持久化
 class F6rpStatus {
+    // 构造函数：设置status数组，并持久化存储在LocalStorage（实际存储在浏览器缓存中，以网站域名隔离）
     constructor() {
-        const val = localStorage.getItem(LocalStorageKey);
-        
-        if (!val) this.list=[];
-        else this.list = JSON.parse(val);
+        const v = localStorage.getItem(LocalStorageStatusKey);
+        this.list = (v)? JSON.parse(v) : [];
     }
 
+    // 持久化存储
     _flush(type_id, status) {
-        const index = this.list.findIndex(x=>x.type_id==type_id);
+        const index = this.list.findIndex(elt => elt.type_id==type_id);
 
         if (index < 0) this.list.push({type_id:type_id, status:status});
         else this.list[index] = {type_id:type_id, status:status};
 
-        localStorage.setItem(LocalStorageKey, JSON.stringify(this.list));
+        localStorage.setItem(LocalStorageStatusKey, JSON.stringify(this.list));
     }
 
     _repr(type_id, status) {
@@ -25,83 +27,60 @@ class F6rpStatus {
             + ', timestamp=' + new Date(status.timestamp).toISOString();
     }
 
+    // 清除UID和所有Status状态数据
     reset() {
         this.list = [];
-        console.log('Info(clearAllStatus): delete value of name=', name, ', value=', GM_getValue(name));
-        localStorage.removeItem(LocalStorageKey);
+        localStorage.removeItem(LocalStorageStatusKey);
     }
 
-    set(type_id, {total:total, start:start, end:end}) {
-        if (start < 0 || start > total) {
-            console.log('Error: value of start error! start=', start);
-            return null;
-        }
-        else if (end < 0 || end > total) {
-            console.log('Error: value of end error! end=', end);
-            return null;
-        }
+    // 根据type_id，设置status并持久化
+    set(type_id, input={total:total, start:start, end:end}) {
+        if (start < 0 || start > total) f6rp.log('Error: set status failed! input=', input);
+        else if (end < 0 || end > total) f6rp.log('Error: set status failed! input=', input);
         else {
             let direction = 'stop';     // [stop| forward| backward]，默认stop代表头尾都为空，即将结束退出
             if (total > start) direction = 'backward'; // 优先读取头部
             else if (end > 0) direction = 'forward';
 
             this._flush(type_id, {total:total, start:start, end:end, direction:direction, timestamp: new Date().getTime()});
-            console.log('Debug(setStatus): ', this.repr(type_id));
+            f6rp.log('Debug: set status = ', this.repr(type_id));
+            return this.get(type_id);
+        }
+        return null;
+    }
+
+    // 根据tpye_id，读取status
+    get(type_id) {
+        const index = this.list.findIndex(elt => elt.type_id==type_id);
+        return (index < 0)? null : this.list[index].status;
+    }
+
+    // 字符串输出status
+    repr(type_id) {
+        const status = this.get(type_id);
+        return (status) ? this._repr(type_id, status) : null;
+    }
+
+    // 根据新的记录总数，刷新status状态
+    update(type_id, new_total) {
+        const now = this.get(type_id);
+
+        if (!Number(new_total) || !Number(now.total)) {
+            f6rp.log('Error: parameters illegally! type_id=', type_id, ', new_total=', new_total);
+            return null;
+        } else if (new_total < now.total) {
+            f6rp.log('Error: update status of new total error! new_total=', new_total, ', status=', this.repr(type_id));
+            return null;
+        } else if (new_total > now.total) {
+            f6rp.log('Info: 发现', new_total-now.total, '条新纪录！！！ total=', now.total, ', new total=', new_total);
+            this.set(type_id, {total:new_total, start:now.start, end:now.end});
             return this.get(type_id);
         }
     }
 
-    get(type_id) {
-        const index = this.list.findIndex(x=>x.type_id==type_id);
-
-        if (index >= 0) return this.list[index].status;
-        else return null;
-    }
-
-    repr(type_id) {
-        const status = this.get(type_id);
-
-        if (status) return this._repr(type_id, status);
-        else return null;
-    }
-
-    repr() {
-        let str = null;
-
-        for (let element of this.list) {
-            str += this._repr(element.type_id, element.status) + '\n'
-        }
-        return str;
-    }
-
-    update(type_id, new_total) {
-        const now = this.get(type_id);
-
-        if (!Number(new_total)) return null;
-        if (new_total < now.total) {
-            console.log('Error(updateStatus): update status of new total error! new_total=', new_total, ', status=', this.repr(type_id));
-            return null;
-        } else if (new_total > now.total) {
-            console.log('Info(updateStatus): 发现', new_total-now.total, '条新纪录！！！ total=', now.total, ', new total=', new_total);
-            this.set(type_id, {total:new_total, start:now.start, end:now.end});
-        }
-
-        return this.get(type_id);
-    }
-
-    // Func：根据status的timestamp信息，返回TM最近一次运行的时间
+    // 根据status的timestamp信息，返回TM最近一次运行的时间
     lastRuntime(type_id) {
-        const ts = this.get(type_id).timestamp;
-        return ts === null ? 0 : ts
+        const status = this.get(type_id);
+        return (status) ? status.timestamp : 0;
     }
-
-    lastRuntime() {
-        let last = 0;
-        for (let x of this.list) {
-            const ts = x.status.timestamp;
-            if ( ts > last) last = ts;
-        }
-        return last;
-    }
-
 }

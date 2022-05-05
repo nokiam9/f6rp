@@ -1,7 +1,9 @@
 'use strict';
 
+
 // for debugger....
 debugger;
+
 f6rp.log(f6rp.util.getTypeID());
 f6rp.log(f6rp.util.getNoticeListInfo());
 f6rp.log(f6rp.util.getNoticeList());
