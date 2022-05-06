@@ -5,6 +5,10 @@
             "saveAs": "package"
         },
         {
+            "src": "src/view/template.html",
+            "saveAs": "uiTemplate"
+        },
+        {
             "src": "src/view/style.css"
         },
         {
@@ -25,6 +29,9 @@
         },
         {
             "src": "src/app/main.js"
+        },
+        {
+            "src": "src/view/vm.js"
         }
     ]
 ]
