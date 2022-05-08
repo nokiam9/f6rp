@@ -7,28 +7,23 @@ const LocalStorageStatusKey = 'F6rpStatus';
 *       核心数据 = [{type_id, total, start, end, timestamp}]
 */
 class F6rpStatusManager {
-    // 构造函数：设置status数组，并持久化存储在LocalStorage
-    constructor() {
+    // 根据ES6标准，这种写法比构造函数更方便，也更能凸显实例属性
+    statusList = [];
+
+    // 从LocalStorage中获取持久化数据，作为初值，但new()之后要马上init()
+    init() {
         const v = localStorage.getItem(LocalStorageStatusKey);
-        this.list = (v)? JSON.parse(v) : []; 
-    }
-
-    // 持久化存储
-    _flush() {
-        localStorage.setItem(LocalStorageStatusKey, JSON.stringify(this.list));
-    }
-
-    _repr(status) {
-        return 'type_id=' + status.type_id + ': total=' + status.total.toString() + ', start=' + status.start.toString()
-            +', end=' + status.end.toString() + ', timestamp=' + new Date(status.timestamp).toISOString();
+        if (v) this.statusList = JSON.parse(v);
     }
 
     // 清除UID和所有Status状态数据
     reset() {
-        this.list = [];
+        this.statusList = [];
         localStorage.removeItem(LocalStorageStatusKey);
     }
 
+    // Todo: 可能同时开了2个窗口，此时LocalStorage如何确保互斥？？？
+    // Todo：这是实例方法的写法，等价于 F6rpStatusManager.prototype.'set' = function(type, total, start, end) {...}
     // 根据type_id，设置status并持久化
     set(type_id, total, start, end) {
         if ((typeof(total) == 'number' && typeof(start) == 'number' && typeof(end) == 'number' && typeof(type_id) == 'string')) {
@@ -36,37 +31,49 @@ class F6rpStatusManager {
                 // 生成新的status记录
                 const status = {type_id:type_id, total:total, start:start, end:end, timestamp:new Date().getTime()};
 
-                const index = this.list.findIndex(elt => elt.type_id==type_id);
-                if (index < 0) this.list.push(status);
-                else this.list[index] = status;
+                const index = this.statusList.findIndex(elt => elt.type_id==type_id);
+                if (index < 0) this.statusList.push(status);
+                else this.statusList[index] = status;
 
-                this._flush();
+                // 持久化存储
+                localStorage.setItem(LocalStorageStatusKey, JSON.stringify(this.statusList)); 
                 return this.get(type_id);
             }
         }
+
+        // Todo：改为Event.dispatch ?
         f6rp.log('Error: parameters illegally when set status! type_id=%s total=%s start=%s end=%s', type_id, total, start, end);
         return false;
     }
 
     // 根据tpye_id，读取status
     get(type_id) {
-        const index = this.list.findIndex(elt => elt.type_id==type_id);
-        return (index < 0)? false : this.list[index];
+        const index = this.statusList.findIndex(elt => elt.type_id==type_id);
+        return (index < 0)? false : this.statusList[index];
     }
 
     // 字符串输出status
     repr(type_id) {
         if (!type_id) {     // 不带参数时全量输出
             let str = '';
-            this.list.forEach(elt => { str += this._repr(elt) + '\n'});
+            this.statusList.forEach(elt => { str += _repr(elt) + '\n'});
             return str;
         }
         else {
             const status = this.get(type_id);
-            return (status) ? this._repr(status) : false
+            return (status) ? _repr(status) : false
+        }
+
+        // 根据ES标准，反引号模版字符串``是一个更好的写法
+        // 这是一个内置函数，外部无法访问
+        function _repr(status) {
+            return `type_id=${status.type_id}: total=${status.total}, start=${status.start}, end=${status.end}, timestampe=${new Date(status.timestamp)}`
+            // return 'type_id=' + status.type_id + ': total=' + status.total.toString() + ', start=' + status.start.toString()
+            //    +', end=' + status.end.toString() + ', timestamp=' + new Date(status.timestamp).toISOString();
         }
     }
 
+    // Todo: 考虑改写为静态方方法？
     // 计算当前爬取数据的方向，[ stop| forward| backward| false ]
     direction(type_id) {
         const status = this.get(type_id);

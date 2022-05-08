@@ -239,10 +239,28 @@ PxerThreadManager.prototype['run'] =function() {
 ## 说明事项
 
 1. analytics.js 中设置了pxer.sendEvent，偷偷向https://point.pea3nut.org/events发送日志
-`pxer.sendEvent = eventSender.send.bind(eventSender);`
+
+    `pxer.sendEvent = eventSender.send.bind(eventSender);`
 
 2. 无法继续运行的严重错误，处理方式为：
 
-``` js
-throw new Error(`PxerThread#init: ${this.id} config illegal`);
-```
+    ``` js
+    throw new Error(`PxerThread#init: ${this.id} config illegal`);
+    ```
+
+3. 关于Class的实例方法和原型方法
+
+    以 PxerEvent为例，其将`init()`,`run()`等方法设为实例方法，必须`new`以后才能使用，等价于写在class内部。
+
+    ```js
+    PxerThread.prototype['init'] =function(task) {
+    PxerThread.prototype['run'] =function _self() {
+    ```
+
+    而将格式检查等与`this`无关的方法，作为原型方法使用，无需`new`即可使用。此时，必须在Class外部定义
+
+    ```js
+    PxerEvent.check = function(pe ,eventType ,listener) {
+    PxerEvent.checkEvent = function(pe ,eventType) {
+    PxerEvent.checkListener = function(listener) {
+    ```
