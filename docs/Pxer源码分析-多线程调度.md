@@ -241,6 +241,8 @@ PxerThreadManager.prototype['run'] =function() {
 1. analytics.js 中设置了pxer.sendEvent，偷偷向https://point.pea3nut.org/events发送日志
 `pxer.sendEvent = eventSender.send.bind(eventSender);`
 
+2. 无法继续运行的严重错误，处理方式为：
+
 ``` js
 throw new Error(`PxerThread#init: ${this.id} config illegal`);
 ```
