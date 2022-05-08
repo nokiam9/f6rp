@@ -248,19 +248,26 @@ PxerThreadManager.prototype['run'] =function() {
     throw new Error(`PxerThread#init: ${this.id} config illegal`);
     ```
 
-3. 关于Class的实例方法和原型方法
+3. 关于Class的实例方法、原型方法、静态方法
 
-    以 PxerEvent为例，其将`init()`,`run()`等方法设为实例方法，必须`new`以后才能使用，等价于写在class内部。
+    以 PxerEvent为例，其将`init()`,`run()`等方法设为**原型方法**，必须`new`以后才能使用。
+    此处直接写在class内部，也可以在Class外部通过prototyp来定义`PxerEvent.prototype['on'] = function(type, listener) {....}`
 
     ```js
-    PxerThread.prototype['init'] =function(task) {
-    PxerThread.prototype['run'] =function _self() {
+    on(type, listener) {
+    one(type, listener) {
+    dispatch(type ,...data){
     ```
 
-    而将格式检查等与`this`无关的方法，作为原型方法使用，无需`new`即可使用。此时，必须在Class外部定义
+    而将格式检查等与`this`无关的方法，作为**静态方法**使用，无需`new`即可使用。
+    此处在Class外部追加定义，ES6也可以在class内部采用`static check (){...}`的方式定义
 
     ```js
     PxerEvent.check = function(pe ,eventType ,listener) {
     PxerEvent.checkEvent = function(pe ,eventType) {
     PxerEvent.checkListener = function(listener) {
     ```
+
+    - 实例方法：构造函数中的this指向的是新创建的实例。因为在此往 this 上添加方法与属性时，其实是在往新创建的实例上添加属性与方法，所以构造函数中的实例方法可称之为实例方法
+    - 原型方法：通过 prototype 添加的方法，将会挂载到原型对象上，因此称之为 原型方法
+    - 静态方法：我们在使用 jQuery 的时候，往往会使用一些构造函数直接调用，而非通过实例调用的方法。例如 $.each，$.ajax，$.post，$.get 等等方法，这些方法直接挂载到构造函数上面，我们称之为静态方法。
