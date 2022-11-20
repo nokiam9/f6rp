@@ -57,6 +57,7 @@
         if ((new Date().getTime() - settings.SECONDS_BEFORE_LAST_RUNTIME*1000) < lastRuntime()) throw new Error('启动等待间隔时间未到');
 
         // 异步等待当前页面完全加载
+        await waitForSelector(window, "#pageid2");
         await waitForSelector(window, settings.selector.current_page);
         page_info = getNoticeListInfo(window.document);
         if (page_info.page_size != settings.PAGE_SIZE) throw new Error('page_size != 20');
@@ -224,7 +225,7 @@
                     if (response.readyState == 4 && response.status == 200) {
                         let parser = new DOMParser();
                         const doc = parser.parseFromString(response.responseText, "text/html");
-                        const str = doc.body.innerText.trim();
+                        const str = doc.querySelector(settings.selector.notice_content).innerText.trim();
                         // console.log("AJAX: response length=" + str.length);
                         resolve(str);
                     }
@@ -387,7 +388,7 @@
     // Func：异步等待DOM全网加载，直到指定元素出现
     function waitForSelector(page, id){
         return new Promise((resolve, reject)=> {
-            const retry_delay = 500;
+            const retry_delay = 1000;
             const retry_limits = 10;
             let retry_cnt = 0;
 
